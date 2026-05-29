@@ -24,7 +24,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final _billController = TextEditingController();
 
-  // ignore: unused_field — wired by Step 6 (log transaction action)
   LedgerRepository? _ledger;
   double _remainingDaily = kDailyCapTHB;
   double _remainingMonthly = kMonthlyCapTHB;
@@ -84,6 +83,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  Future<void> _logTransaction() async {
+    final ledger = _ledger;
+    if (ledger == null) return;
+    final bill = double.tryParse(_billController.text) ?? 0;
+    if (bill <= 0) return;
+
+    final now = _nowBangkok();
+    final split = calculateSplit(
+      billTHB: bill,
+      remainingDailyTHB: _remainingDaily,
+      remainingMonthlyTHB: _remainingMonthly,
+      nowBangkok: now,
+    );
+    await ledger.append(LoggedTransaction.fromSplit(
+      billTHB: bill,
+      split: split,
+      timestampBangkok: now,
+    ));
+
+    final newDaily = await ledger.remainingDaily(now);
+    final newMonthly = await ledger.remainingMonthly(now);
+    final newSplit = calculateSplit(
+      billTHB: 0,
+      remainingDailyTHB: newDaily,
+      remainingMonthlyTHB: newMonthly,
+      nowBangkok: now,
+    );
+
+    if (!mounted) return;
+    _billController.clear();
+    setState(() {
+      _remainingDaily = newDaily;
+      _remainingMonthly = newMonthly;
+      _govShare = 0;
+      _userShare = 0;
+      _schemeActive = newSplit.schemeActive;
+    });
+  }
+
   String _fmt(double v) =>
       v == v.truncate() ? v.toInt().toString() : v.toStringAsFixed(2);
 
@@ -126,7 +164,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: CdsSpacing.xl),
                 FilledButton(
-                  onPressed: canLog ? () {} : null,
+                  onPressed: canLog ? _logTransaction : null,
                   child: const Text('Log Transaction'),
                 ),
               ],
