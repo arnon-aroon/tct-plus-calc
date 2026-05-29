@@ -21,3 +21,36 @@ flutter run
 ```
 
 Targets: iOS, Android.
+
+## Running iOS from source
+
+**Requirements:**
+- macOS with Xcode 15.0 or later
+- CocoaPods 1.14.0 or later (`gem install cocoapods`)
+- Flutter 3.10.0 or later
+
+**Steps:**
+
+```sh
+# Clone the repo
+git clone https://github.com/arnon-aroon/tct-plus-calc.git
+cd tct-plus-calc
+
+# Install dependencies
+flutter pub get
+cd ios && pod install && cd ..
+
+# Run on a connected device or simulator
+flutter run
+```
+
+To target a specific simulator:
+
+```sh
+flutter devices          # list available devices
+flutter run -d <device-id>
+```
+
+**Troubleshooting:**
+- If CocoaPods fails, try `pod repo update` then `pod install` again.
+- Xcode must have the iOS SDK installed (Xcode → Settings → Platforms → iOS).
