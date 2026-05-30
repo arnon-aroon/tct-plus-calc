@@ -10,6 +10,12 @@ Calculates the patient co-pay amount under the Thai Chuay Thai Plus scheme where
 
 **Active period: June 1 – September 30, 2026**
 
+## Download (Android)
+
+**[Download APK — v0.1.1](https://github.com/arnon-aroon/tct-plus-calc/releases/download/v0.1.1/app-release.apk)**
+
+To sideload: enable *Install unknown apps* on your device, then open the downloaded APK and tap Install.
+
 ## Related
 
 - Tracker issue: [TCT-1](/TCT/issues/TCT-1)
