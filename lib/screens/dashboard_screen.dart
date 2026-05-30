@@ -188,7 +188,7 @@ class _SchemeBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: CdsColors.warning.withAlpha(30),
         border: Border.all(color: CdsColors.warning),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(CdsRadius.button),
       ),
       child: Row(
         children: [
@@ -263,7 +263,7 @@ class _BillInput extends StatelessWidget {
         labelText: 'Bill amount',
         suffixText: 'THB',
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(CdsRadius.input),
         ),
         labelStyle: theme.textTheme.bodyMedium,
       ),
