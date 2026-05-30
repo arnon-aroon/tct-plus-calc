@@ -20,6 +20,20 @@ LoggedTransaction _txn(DateTime ts, double gov) => LoggedTransaction(
       billTHB: gov,
     );
 
+LoggedTransaction _fullTxn(
+  DateTime ts, {
+  required double bill,
+  required double gov,
+  required double user,
+}) =>
+    LoggedTransaction(
+      id: 'id-$bill-${ts.millisecondsSinceEpoch}',
+      timestampBangkok: ts,
+      govShareTHB: gov,
+      userShareTHB: user,
+      billTHB: bill,
+    );
+
 void main() {
   group('LedgerRepository', () {
     test('3 txns same Bangkok day → govSpentToday sums correctly', () async {
@@ -35,7 +49,7 @@ void main() {
     test('yesterday + today Bangkok → only today counted', () async {
       final repo = await _repo();
       await repo.append(_txn(bkk(2026, 7, 14, 23, 0), 80)); // yesterday
-      await repo.append(_txn(bkk(2026, 7, 15, 1, 0), 60));  // today
+      await repo.append(_txn(bkk(2026, 7, 15, 1, 0), 60)); // today
 
       expect(await repo.govSpentToday(bkk(2026, 7, 15)), equals(60.0));
     });
@@ -102,6 +116,67 @@ void main() {
       // Re-use same prefs object (mock doesn't reset between calls).
       final repo2 = LedgerRepository(prefs);
       expect((await repo2.all()).length, equals(1));
+    });
+
+    test('totalsForDay sums bill, user, and gov for Bangkok day only', () async {
+      final repo = await _repo();
+      await repo.append(_fullTxn(
+        bkk(2026, 7, 14, 23, 0),
+        bill: 100,
+        gov: 60,
+        user: 40,
+      ));
+      await repo.append(_fullTxn(
+        bkk(2026, 7, 15, 9, 0),
+        bill: 200,
+        gov: 120,
+        user: 80,
+      ));
+      await repo.append(_fullTxn(
+        bkk(2026, 7, 15, 18, 0),
+        bill: 50,
+        gov: 30,
+        user: 20,
+      ));
+
+      final totals = await repo.totalsForDay(bkk(2026, 7, 15));
+      expect(totals.billTHB, equals(250.0));
+      expect(totals.userShareTHB, equals(100.0));
+      expect(totals.govShareTHB, equals(150.0));
+      expect(totals.transactionCount, equals(2));
+    });
+
+    test('totalsForMonth sums across Bangkok month boundaries', () async {
+      final repo = await _repo();
+      await repo.append(_fullTxn(
+        bkk(2026, 6, 30, 23, 30),
+        bill: 100,
+        gov: 60,
+        user: 40,
+      ));
+      await repo.append(_fullTxn(
+        bkk(2026, 7, 1, 0, 30),
+        bill: 150,
+        gov: 90,
+        user: 60,
+      ));
+
+      final june = await repo.totalsForMonth(bkk(2026, 6, 1));
+      expect(june.billTHB, equals(100.0));
+      expect(june.transactionCount, equals(1));
+
+      final july = await repo.totalsForMonth(bkk(2026, 7, 1));
+      expect(july.billTHB, equals(150.0));
+      expect(july.transactionCount, equals(1));
+    });
+
+    test('totalsForDay returns zero totals when no transactions', () async {
+      final repo = await _repo();
+      final totals = await repo.totalsForDay(bkk(2026, 7, 15));
+      expect(totals.billTHB, equals(0));
+      expect(totals.userShareTHB, equals(0));
+      expect(totals.govShareTHB, equals(0));
+      expect(totals.transactionCount, equals(0));
     });
   });
 }

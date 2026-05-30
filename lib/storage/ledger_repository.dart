@@ -10,6 +10,28 @@ import '../calc/co_pay_calculator.dart';
 
 const String _kLedgerKey = 'tct_ledger_v1';
 
+/// Aggregated bill and share totals for a Bangkok calendar period.
+class CostTotals {
+  const CostTotals({
+    required this.billTHB,
+    required this.userShareTHB,
+    required this.govShareTHB,
+    required this.transactionCount,
+  });
+
+  static const empty = CostTotals(
+    billTHB: 0,
+    userShareTHB: 0,
+    govShareTHB: 0,
+    transactionCount: 0,
+  );
+
+  final double billTHB;
+  final double userShareTHB;
+  final double govShareTHB;
+  final int transactionCount;
+}
+
 /// A single recorded transaction.
 class LoggedTransaction {
   LoggedTransaction({
@@ -108,7 +130,40 @@ class LedgerRepository {
     return remaining < 0 ? 0.0 : remaining;
   }
 
+  /// Sum logged costs for the Bangkok calendar day of [nowBangkok].
+  Future<CostTotals> totalsForDay(DateTime nowBangkok) async {
+    final txns =
+        _load().where((t) => _sameDay(t.timestampBangkok, nowBangkok));
+    return _sum(txns);
+  }
+
+  /// Sum logged costs for the Bangkok calendar month of [nowBangkok].
+  Future<CostTotals> totalsForMonth(DateTime nowBangkok) async {
+    final txns =
+        _load().where((t) => _sameMonth(t.timestampBangkok, nowBangkok));
+    return _sum(txns);
+  }
+
   // ── private helpers ──────────────────────────────────────────────────────
+
+  static CostTotals _sum(Iterable<LoggedTransaction> txns) {
+    var bill = 0.0;
+    var user = 0.0;
+    var gov = 0.0;
+    var count = 0;
+    for (final t in txns) {
+      bill += t.billTHB;
+      user += t.userShareTHB;
+      gov += t.govShareTHB;
+      count++;
+    }
+    return CostTotals(
+      billTHB: bill,
+      userShareTHB: user,
+      govShareTHB: gov,
+      transactionCount: count,
+    );
+  }
 
   List<LoggedTransaction> _load() {
     final raw = _prefs.getString(_kLedgerKey);

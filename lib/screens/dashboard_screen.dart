@@ -29,6 +29,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double _remainingMonthly = kMonthlyCapTHB;
   double _govShare = 0;
   double _userShare = 0;
+  CostTotals _todayTotals = CostTotals.empty;
+  CostTotals _monthTotals = CostTotals.empty;
   bool _schemeActive = true;
   bool _loading = true;
 
@@ -51,6 +53,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final now = _nowBangkok();
     final daily = await ledger.remainingDaily(now);
     final monthly = await ledger.remainingMonthly(now);
+    final todayTotals = await ledger.totalsForDay(now);
+    final monthTotals = await ledger.totalsForMonth(now);
     final split = calculateSplit(
       billTHB: 0,
       remainingDailyTHB: daily,
@@ -62,6 +66,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _ledger = ledger;
         _remainingDaily = daily;
         _remainingMonthly = monthly;
+        _todayTotals = todayTotals;
+        _monthTotals = monthTotals;
         _schemeActive = split.schemeActive;
         _loading = false;
       });
@@ -104,6 +110,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final newDaily = await ledger.remainingDaily(now);
     final newMonthly = await ledger.remainingMonthly(now);
+    final todayTotals = await ledger.totalsForDay(now);
+    final monthTotals = await ledger.totalsForMonth(now);
     final newSplit = calculateSplit(
       billTHB: 0,
       remainingDailyTHB: newDaily,
@@ -116,6 +124,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       _remainingDaily = newDaily;
       _remainingMonthly = newMonthly;
+      _todayTotals = todayTotals;
+      _monthTotals = monthTotals;
       _govShare = 0;
       _userShare = 0;
       _schemeActive = newSplit.schemeActive;
@@ -159,6 +169,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _SplitReadout(
                   userShare: _userShare,
                   govShare: _govShare,
+                  fmt: _fmt,
+                  theme: theme,
+                ),
+                const SizedBox(height: CdsSpacing.lg),
+                _CostReportCard(
+                  todayTotals: _todayTotals,
+                  monthTotals: _monthTotals,
                   fmt: _fmt,
                   theme: theme,
                 ),
@@ -314,6 +331,97 @@ class _SplitReadout extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CostReportCard extends StatelessWidget {
+  const _CostReportCard({
+    required this.todayTotals,
+    required this.monthTotals,
+    required this.fmt,
+    required this.theme,
+  });
+
+  final CostTotals todayTotals;
+  final CostTotals monthTotals;
+  final String Function(double) fmt;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(CdsSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Cost report', style: theme.textTheme.titleMedium),
+            const SizedBox(height: CdsSpacing.sm),
+            _CostReportSection(
+              label: 'Today',
+              totals: todayTotals,
+              fmt: fmt,
+              theme: theme,
+            ),
+            const SizedBox(height: CdsSpacing.md),
+            _CostReportSection(
+              label: 'This month',
+              totals: monthTotals,
+              fmt: fmt,
+              theme: theme,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CostReportSection extends StatelessWidget {
+  const _CostReportSection({
+    required this.label,
+    required this.totals,
+    required this.fmt,
+    required this.theme,
+  });
+
+  final String label;
+  final CostTotals totals;
+  final String Function(double) fmt;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: theme.textTheme.labelLarge),
+        const SizedBox(height: CdsSpacing.xs),
+        _Row(
+          label: 'Total bill',
+          value: '${fmt(totals.billTHB)} THB',
+          theme: theme,
+        ),
+        const SizedBox(height: CdsSpacing.xs),
+        _Row(
+          label: 'User share',
+          value: '${fmt(totals.userShareTHB)} THB',
+          theme: theme,
+        ),
+        const SizedBox(height: CdsSpacing.xs),
+        _Row(
+          label: 'Government share',
+          value: '${fmt(totals.govShareTHB)} THB',
+          theme: theme,
+        ),
+        const SizedBox(height: CdsSpacing.xs),
+        _Row(
+          label: 'Transactions',
+          value: totals.transactionCount.toString(),
+          theme: theme,
+        ),
+      ],
     );
   }
 }
