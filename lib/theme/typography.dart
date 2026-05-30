@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
 // CDS typography scale — sourced from centraldigital/cds-flutter @ 02fb3a0
-// Font family: CPN (Central Pattana font). Falls back to system sans-serif
-// if the asset is not bundled in this project.
-const String cdsFontFamily = 'CPN';
-
 TextTheme buildCdsTextTheme(TextTheme base) {
   return base.copyWith(
     displayLarge: base.displayLarge?.copyWith(fontSize: 40),
