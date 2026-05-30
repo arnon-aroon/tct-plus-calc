@@ -235,9 +235,14 @@ class _AllowanceCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label, style: theme.textTheme.bodyMedium),
-            Text(
-              '${_fmt(value)} / ${_fmt(cap)} THB',
-              style: theme.textTheme.titleMedium,
+            const SizedBox(width: CdsSpacing.sm),
+            Flexible(
+              child: Text(
+                '${_fmt(value)} / ${_fmt(cap)} THB',
+                style: theme.textTheme.titleMedium,
+                textAlign: TextAlign.end,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -325,7 +330,15 @@ class _Row extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: theme.textTheme.bodyMedium),
-        Text(value, style: theme.textTheme.bodyLarge),
+        const SizedBox(width: CdsSpacing.sm),
+        Flexible(
+          child: Text(
+            value,
+            style: theme.textTheme.bodyLarge,
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }
